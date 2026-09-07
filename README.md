@@ -2,7 +2,8 @@
 
 An [OpenCode](https://opencode.ai) plugin that recommends the best models on
 **OpenCode Zen** (`opencode`) and **OpenCode Go** (`opencode-go`) using live
-catalog pricing.
+catalog pricing. Shares its sidebar building blocks with
+[opencode-plugin-kit](../opencode-plugin-kit).
 
 ## Metrics
 
@@ -42,7 +43,6 @@ Sidebar widget:
 ![Model picks sidebar](docs/screenshot.png)
 
 <!-- To capture: install the plugin, open opencode2's TUI, and screenshot the sidebar; save as docs/screenshot.png -->
-
 
 ## Install (project-local)
 

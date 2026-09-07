@@ -10,7 +10,7 @@ import {
   type Metrics,
   type SessionAssumptions,
 } from "./metrics.js"
-import { DEFAULT_PROVIDERS, asArray, providerLabel } from "./shared/providers.ts"
+import { asArray, availableProviders, providerLabel } from "opencode-plugin-kit"
 
 /**
  * Model Recommender plugin
@@ -25,7 +25,7 @@ import { DEFAULT_PROVIDERS, asArray, providerLabel } from "./shared/providers.ts
  *    breakdown for a specific model (defaults to the current one)
  *  - `/recommend-models` command
  *
- * Extend DEFAULT_PROVIDERS later to cover other providers.
+ * Providers come from availableProviders() (auth.json + env), so new providers appear automatically.
  */
 
 type RankedModel = {
@@ -189,7 +189,7 @@ export default Plugin.define({
             session?: SessionAssumptions
           }
           const sort: "cacheRatio" | "tokenCost" | "sessionCost" = input.sort ?? "sessionCost"
-          const providers = input.providers && input.providers.length > 0 ? input.providers : DEFAULT_PROVIDERS
+          const providers = input.providers && input.providers.length > 0 ? input.providers : availableProviders()
           const session = input.session ?? {}
           const [catalogModels, current] = await Promise.all([loadCatalog(), currentModel()])
 
@@ -268,7 +268,7 @@ export default Plugin.define({
         execute: async (rawInput) => {
           const input = rawInput as { providerID?: string; modelID?: string; session?: SessionAssumptions }
           const [catalogModels, current] = await Promise.all([loadCatalog(), currentModel()])
-          const allRows = buildRows(catalogModels, DEFAULT_PROVIDERS, input.session)
+          const allRows = buildRows(catalogModels, availableProviders(), input.session)
           const target = allRows.find(
             (r) =>
               (input.providerID ?? current?.providerID) === r.providerID &&

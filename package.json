@@ -12,8 +12,7 @@
   "files": [
     "index.ts",
     "tui.tsx",
-    "metrics.ts",
-    "shared"
+    "metrics.ts"
   ],
   "peerDependencies": {
     "@opentui/core": "^0.5.11",
@@ -29,9 +28,11 @@
     "cache"
   ],
   "dependencies": {
-    "@opencode-ai/plugin": "beta"
+    "@opencode-ai/plugin": "beta",
+    "opencode-plugin-kit": "file:../opencode-plugin-kit"
   },
   "devDependencies": {
+    "@types/node": "^26.5.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.5.0",
     "prettier": "^3.9.6",
