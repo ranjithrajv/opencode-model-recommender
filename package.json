@@ -1,0 +1,44 @@
+{
+  "name": "opencode-model-recommender",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Recommends the best models on OpenCode Zen and OpenCode Go by cache ratio, token cost, and session cost.",
+  "license": "AGPL-3.0",
+  "author": "Ranjith Raj",
+  "exports": {
+    ".": "./index.ts",
+    "./tui": "./tui.tsx"
+  },
+  "files": [
+    "index.ts",
+    "tui.tsx",
+    "metrics.ts",
+    "shared"
+  ],
+  "peerDependencies": {
+    "@opentui/core": "^0.5.11",
+    "@opentui/solid": "^0.5.11",
+    "solid-js": "^1.9.15"
+  },
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "models",
+    "recommendation",
+    "cost",
+    "cache"
+  ],
+  "dependencies": {
+    "@opencode-ai/plugin": "beta"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^17.5.0",
+    "prettier": "^3.9.6",
+    "typescript": "^7.0.2"
+  },
+  "scripts": {
+    "prepare": "husky",
+    "typecheck": "tsc --noEmit"
+  }
+}
