@@ -50,6 +50,24 @@ function buildFilters(): ProviderFilter[] {
   ]
 }
 
+type CurrentModel = { providerID: string; modelID: string } | undefined
+
+/** Resolve the model the session is actually using from its last assistant message. */
+function currentFromSession(context: any, sessionID?: string): CurrentModel {
+  if (!sessionID) return undefined
+  try {
+    const messages = context.data.session.message.list(sessionID) ?? []
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = (messages[i] as any)?.info ?? messages[i]
+      if (m?.role !== "assistant") continue
+      const providerID = String(m?.model?.providerID ?? m?.providerID ?? "")
+      const modelID = String(m?.model?.id ?? m?.modelID ?? m?.id ?? "")
+      if (providerID && modelID) return { providerID, modelID }
+    }
+  } catch {}
+  return undefined
+}
+
 export default Plugin.define({
   id: "model-recommender.cli",
   setup(context: any) {
@@ -69,22 +87,28 @@ export default Plugin.define({
     })
     picker.registerCommand()
 
-    function Picks() {
+    function Picks(props: { sessionID?: string }) {
       const ctx = usePlugin()
-      const [picks] = createResource(async () => {
-        const out = await ctx.client.model.list()
-        const models = asArray<any>(out)
-        const rows: Row[] = models
-          .filter((m) => availableProviders().includes(m.providerID) && m.enabled !== false)
-          .map((m) => ({
-            providerID: m.providerID,
-            modelID: m.modelID ?? m.id,
-            name: m.name ?? m.modelID ?? m.id,
-            ...metrics(m.cost as CostTier[] | undefined),
-          }))
-        const current = await ctx.client.model.default().catch(() => undefined)
-        return { rows, current }
-      })
+      const [picks] = createResource(
+        () => props.sessionID,
+        async (sid) => {
+          const out = await ctx.client.model.list()
+          const models = asArray<any>(out)
+          const rows: Row[] = models
+            .filter((m) => availableProviders().includes(m.providerID) && m.enabled !== false)
+            .map((m) => ({
+              providerID: m.providerID,
+              modelID: m.modelID ?? m.id,
+              name: m.name ?? m.modelID ?? m.id,
+              ...metrics(m.cost as CostTier[] | undefined),
+            }))
+          const sessionCurrent = currentFromSession(ctx, sid)
+          const current = sessionCurrent
+            ? { data: sessionCurrent }
+            : await ctx.client.model.default().catch(() => undefined)
+          return { rows, current }
+        },
+      )
 
       return (
         <Show when={!picks.error} fallback={<text>⚠ model picks unavailable</text>}>
@@ -158,7 +182,7 @@ export default Plugin.define({
 
     return context.ui.slot({
       append: "sidebar.content",
-      render: () => <Picks />,
+      render: ({ sessionID }: { sessionID?: string }) => <Picks sessionID={sessionID} />,
     })
   },
 })

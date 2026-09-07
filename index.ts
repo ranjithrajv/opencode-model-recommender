@@ -114,6 +114,19 @@ export default Plugin.define({
       }
     }
 
+    // Prefer the model the active session is actually using (from the session's
+    // model config), falling back to the workspace default.
+    const currentModelForSession = async (sessionID?: string): Promise<CurrentModel> => {
+      if (sessionID) {
+        try {
+          const s = (await ctx.session.get(sessionID as any)) as any
+          const model = s?.data?.model ?? s?.model
+          if (model?.id) return { providerID: String(model.providerID), modelID: String(model.id) }
+        } catch {}
+      }
+      return currentModel()
+    }
+
     const buildRows = (catalogModels: any[], providers: string[], session?: SessionAssumptions): RankedModel[] => {
       const rows: RankedModel[] = []
       for (const m of catalogModels) {
@@ -180,7 +193,7 @@ export default Plugin.define({
           additionalProperties: false,
         },
         options: { namespace: "models", codemode: true },
-        execute: async (rawInput) => {
+        execute: async (rawInput, context) => {
           const input = rawInput as {
             sort?: "cacheRatio" | "tokenCost" | "sessionCost"
             providers?: string[]
@@ -191,7 +204,10 @@ export default Plugin.define({
           const sort: "cacheRatio" | "tokenCost" | "sessionCost" = input.sort ?? "sessionCost"
           const providers = input.providers && input.providers.length > 0 ? input.providers : availableProviders()
           const session = input.session ?? {}
-          const [catalogModels, current] = await Promise.all([loadCatalog(), currentModel()])
+          const [catalogModels, current] = await Promise.all([
+            loadCatalog(),
+            currentModelForSession(context?.sessionID),
+          ])
 
           const allRows = buildRows(catalogModels, providers, session)
           const rows = input.free ? allRows.filter((r) => r.free) : allRows.filter((r) => !r.free)
@@ -265,9 +281,12 @@ export default Plugin.define({
           additionalProperties: false,
         },
         options: { namespace: "models", codemode: true },
-        execute: async (rawInput) => {
+        execute: async (rawInput, context) => {
           const input = rawInput as { providerID?: string; modelID?: string; session?: SessionAssumptions }
-          const [catalogModels, current] = await Promise.all([loadCatalog(), currentModel()])
+          const [catalogModels, current] = await Promise.all([
+            loadCatalog(),
+            currentModelForSession(context?.sessionID),
+          ])
           const allRows = buildRows(catalogModels, availableProviders(), input.session)
           const target = allRows.find(
             (r) =>
