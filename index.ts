@@ -119,7 +119,7 @@ export default Plugin.define({
     const currentModelForSession = async (sessionID?: string): Promise<CurrentModel> => {
       if (sessionID) {
         try {
-          const s = (await ctx.session.get(sessionID as any)) as any
+          const s = (await ctx.session.get({ sessionID } as any)) as any
           const model = s?.data?.model ?? s?.model
           if (model?.id) return { providerID: String(model.providerID), modelID: String(model.id) }
         } catch {}

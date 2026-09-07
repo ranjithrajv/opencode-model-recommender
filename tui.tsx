@@ -4,6 +4,7 @@ import {
   asArray,
   availableProviders,
   createViewPicker,
+  isAssistant,
   line,
   providerLabel,
   providerTitle,
@@ -59,7 +60,7 @@ function currentFromSession(context: any, sessionID?: string): CurrentModel {
     const messages = context.data.session.message.list(sessionID) ?? []
     for (let i = messages.length - 1; i >= 0; i--) {
       const m = (messages[i] as any)?.info ?? messages[i]
-      if (m?.role !== "assistant") continue
+      if (!isAssistant(m)) continue
       const providerID = String(m?.model?.providerID ?? m?.providerID ?? "")
       const modelID = String(m?.model?.id ?? m?.modelID ?? m?.id ?? "")
       if (providerID && modelID) return { providerID, modelID }
