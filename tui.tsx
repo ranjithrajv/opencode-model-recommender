@@ -3,6 +3,7 @@ import { createResource, For, Show } from "solid-js"
 import {
   asArray,
   availableProviders,
+  createCachedStore,
   createViewPicker,
   isAssistant,
   line,
@@ -88,6 +89,15 @@ export default Plugin.define({
     })
     picker.registerCommand()
 
+    // Durable cache of the catalog picks: the sidebar restores the last known
+    // view instantly after a TUI restart (stale-while-revalidate) instead of
+    // showing "loading…" until the catalog refetch completes.
+    type PicksData = { rows: Row[]; current: { data?: { providerID: string; modelID: string } | null } | undefined }
+    const picksCache = createCachedStore<PicksData | null>(context, "picks", {
+      initial: null,
+      staleAfterMs: 5 * 60_000,
+    })
+
     function Picks(props: { sessionID?: string }) {
       const ctx = usePlugin()
       const [picks] = createResource(
@@ -107,8 +117,11 @@ export default Plugin.define({
           const current = sessionCurrent
             ? { data: sessionCurrent }
             : await ctx.client.model.default().catch(() => undefined)
-          return { rows, current }
+          const data = { rows, current }
+          picksCache.set(data)
+          return data
         },
+        { initialValue: picksCache.value ?? undefined },
       )
 
       return (
