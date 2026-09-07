@@ -6,6 +6,7 @@ import {
   createViewPicker,
   line,
   providerLabel,
+  providerTitle,
   short,
   type PickerOption,
 } from "opencode-plugin-kit"
@@ -33,17 +34,27 @@ interface ProviderFilter extends PickerOption {
   readonly providers: string[]
 }
 
-const FILTERS: ProviderFilter[] = [
-  { id: "all", title: "All", description: "Picks across all authenticated providers", providers: [] },
-  { id: "zen", title: "Zen", description: "OpenCode Zen models only", providers: ["opencode"] },
-  { id: "go", title: "Go", description: "OpenCode Go models only", providers: ["opencode-go"] },
-]
+// One filter per authenticated provider, plus "All". Built from the same
+// discovery call the tool uses, so new providers appear without edits.
+// Ids are the short labels (zen/go/google/zai/hf) — legacy persisted picks
+// ("zen", "go") still resolve.
+function buildFilters(): ProviderFilter[] {
+  return [
+    { id: "all", title: "All", description: "Picks across all authenticated providers", providers: [] },
+    ...availableProviders().map((pid) => ({
+      id: providerLabel(pid),
+      title: providerTitle(pid),
+      description: `${providerTitle(pid)} models only`,
+      providers: [pid],
+    })),
+  ]
+}
 
 export default Plugin.define({
   id: "model-recommender.cli",
   setup(context: any) {
     const picker = createViewPicker(context, {
-      registry: FILTERS,
+      registry: buildFilters(),
       storageKey: "filter",
       command: {
         id: "models.view",

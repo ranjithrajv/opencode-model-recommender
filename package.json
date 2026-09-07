@@ -29,7 +29,7 @@
   ],
   "dependencies": {
     "@opencode-ai/plugin": "beta",
-    "opencode-plugin-kit": "file:../opencode-plugin-kit"
+    "opencode-plugin-kit": "^0.1.0"
   },
   "devDependencies": {
     "@types/node": "^26.5.0",
