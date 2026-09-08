@@ -1,5 +1,5 @@
 {
-  "name": "opencode-model-recommender",
+  "name": "@ranjithrajv/opencode-model-recommender",
   "version": "0.1.0",
   "description": "Recommends the best models on OpenCode Zen and OpenCode Go by cache ratio, token cost, and session cost.",
   "keywords": [
@@ -12,6 +12,10 @@
   ],
   "license": "AGPL-3.0",
   "author": "Ranjith Raj",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ranjithrajv/opencode-model-recommender.git"
+  },
   "files": [
     "index.ts",
     "tui.tsx",
@@ -22,17 +26,21 @@
     ".": "./index.ts",
     "./tui": "./tui.tsx"
   },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "scripts": {
     "check": "vp check",
     "check:fix": "vp check --fix",
     "fmt": "vp fmt",
     "lint": "vp lint",
-    "typecheck": "vp check --typecheck",
-    "test": "vitest run"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage.enabled"
   },
   "dependencies": {
     "@opencode-ai/plugin": "beta",
-    "opencode-plugin-kit": "file:../opencode-plugin-kit"
+    "opencode-plugin-kit": "^1.0.0-alpha.1"
   },
   "devDependencies": {
     "@types/node": "^26.5.0",
