@@ -1,6 +1,6 @@
 {
   "name": "opencode-model-recommender",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0-alpha.2",
   "description": "Recommends the best models on OpenCode Zen and OpenCode Go by cache ratio, token cost, and session cost.",
   "keywords": [
     "cache",
@@ -55,7 +55,7 @@
   "peerDependencies": {
     "@opentui/core": "^0.5.11",
     "@opentui/solid": "^0.5.11",
-    "solid-js": "^1.9.15"
+    "solid-js": "^1.9.12"
   },
   "packageManager": "npm@11.19.1"
 }
