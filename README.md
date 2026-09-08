@@ -44,23 +44,20 @@ Sidebar widget:
 
 <!-- To capture: install the plugin, open opencode2's TUI, and screenshot the sidebar; save as docs/screenshot.png -->
 
-## Install (project-local)
+## Install
 
-```sh
-cp -r opencode-model-recommender .opencode/plugins/
-opencode2 service restart
-```
+Published on [npm](https://www.npmjs.com/package/opencode-model-recommender).
 
-## Install (global / package)
-
-```sh
-opencode2 plugin add ./opencode-model-recommender   # or publish to npm and add the name
-```
-
-Or in `opencode.jsonc`:
+**Automatic (recommended)** — add it to your OpenCode config (`~/.config/opencode/opencode.json`) and it installs on startup:
 
 ```jsonc
-{ "plugins": ["./opencode-model-recommender"] }
+{ "plugins": ["opencode-model-recommender"] }
+```
+
+**Manual**:
+
+```sh
+npm install opencode-model-recommender
 ```
 
 ## Extending to other providers
