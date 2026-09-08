@@ -255,6 +255,25 @@ describe("models_recommend", () => {
     expect(out.content).not.toContain("💡")
   })
 
+  test("omits the free-excluded note when there are no free models", async () => {
+    const f = await setup({
+      catalog: {
+        model: {
+          list: vi.fn(async () => ({
+            data: [
+              model("a1", "opencode-go", [{ input: 1, output: 1, cache: { read: 0.5 } }], "A One"),
+              model("b2", "opencode", [{ input: 2, output: 2, cache: { read: 0.5 } }], "B Two"),
+            ],
+          })),
+          default: vi.fn(async () => ({ data: { providerID: "opencode-go", modelID: "a1" } })),
+        },
+      },
+    })
+    const out = await rec(f).execute({})
+    expect(out.content).toContain("Showing 2 priced models.")
+    expect(out.content).not.toContain("free, excluded")
+  })
+
   test("reports a singular priced model and excluded free one", async () => {
     const f = await setup({
       catalog: {

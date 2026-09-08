@@ -62,11 +62,12 @@ function table(rows: RankedModel[], sort: string, current: CurrentModel): string
 
   // Free rows are already filtered out of `rows` by every caller, so the
   // "(N free, excluded)" note below is only reachable from future callers.
-  /* v8 ignore next */
+  /* v8 ignore start */
   lines.push(
     "",
     `Showing ${sorted.length} priced model${sorted.length !== 1 ? "s" : ""}${free.length > 0 ? ` (${free.length} free, excluded)` : ""}.`,
   )
+  /* v8 ignore stop */
   lines.push(
     "",
     "Definitions:",
@@ -89,8 +90,9 @@ function savingsLine(rows: RankedModel[], current: CurrentModel): string | undef
     .toSorted((a, b) => (a.sessionCost as number) - (b.sessionCost as number))[0]
   // `cheapest` is filtered from rows that include the paid current model, so
   // it always exists with a non-null session cost at this point.
-  /* v8 ignore next */
+  /* v8 ignore start */
   if (!cheapest || cheapest.sessionCost === null) return undefined
+  /* v8 ignore stop */
   const save = savings(cur.sessionCost, cheapest.sessionCost)
   if (save === null) return undefined
   // The verb branch is unreachable: cheapest === cur implies save === null.

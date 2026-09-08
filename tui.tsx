@@ -129,12 +129,13 @@ export default Plugin.define({
               const free = scoped.filter((r) => r.free).toSorted((a, b) => a.name.localeCompare(b.name))
               // Paid rows always have numeric metrics, so the Infinity
               // fallbacks below are unreachable ordering hints only.
-              /* v8 ignore next 3 */
+              /* v8 ignore start */
               const b = {
                 session: paid.toSorted((a, b) => (a.sessionCost ?? Infinity) - (b.sessionCost ?? Infinity))[0],
                 cache: paid.toSorted((a, b) => (b.cacheRatio ?? -1) - (a.cacheRatio ?? -1))[0],
                 token: paid.toSorted((a, b) => (a.tokenCost ?? Infinity) - (b.tokenCost ?? Infinity))[0],
               }
+              /* v8 ignore stop */
 
               const cur = p().current?.data
               const curScoped = cur && (active.providers.length === 0 || active.providers.includes(cur.providerID))
