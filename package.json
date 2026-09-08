@@ -1,5 +1,5 @@
 {
-  "name": "@ranjithrajv/opencode-model-recommender",
+  "name": "@ranjithraj/opencode-model-recommender",
   "version": "1.0.0-alpha.1",
   "description": "Recommends the best models on OpenCode Zen and OpenCode Go by cache ratio, token cost, and session cost.",
   "keywords": [
