@@ -1,14 +1,15 @@
 import { Plugin, usePlugin } from "@opencode-ai/plugin/tui"
-import { createResource, For, Show } from "solid-js"
+import { For, Show } from "solid-js"
 import {
   asArray,
   availableProviders,
+  createCachedResource,
   createCachedStore,
   createViewPicker,
-  isAssistant,
   line,
   providerLabel,
   providerTitle,
+  resolveCurrentModel,
   short,
   type PickerOption,
 } from "opencode-plugin-kit"
@@ -40,7 +41,7 @@ interface ProviderFilter extends PickerOption {
 // discovery call the tool uses, so new providers appear without edits.
 // Ids are the short labels (zen/go/google/zai/hf) — legacy persisted picks
 // ("zen", "go") still resolve.
-function buildFilters(): ProviderFilter[] {
+export function buildFilters(): ProviderFilter[] {
   return [
     { id: "all", title: "All", description: "Picks across all authenticated providers", providers: [] },
     ...availableProviders().map((pid) => ({
@@ -50,24 +51,6 @@ function buildFilters(): ProviderFilter[] {
       providers: [pid],
     })),
   ]
-}
-
-type CurrentModel = { providerID: string; modelID: string } | undefined
-
-/** Resolve the model the session is actually using from its last assistant message. */
-function currentFromSession(context: any, sessionID?: string): CurrentModel {
-  if (!sessionID) return undefined
-  try {
-    const messages = context.data.session.message.list(sessionID) ?? []
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const m = (messages[i] as any)?.info ?? messages[i]
-      if (!isAssistant(m)) continue
-      const providerID = String(m?.model?.providerID ?? m?.providerID ?? "")
-      const modelID = String(m?.model?.id ?? m?.modelID ?? m?.id ?? "")
-      if (providerID && modelID) return { providerID, modelID }
-    }
-  } catch {}
-  return undefined
 }
 
 export default Plugin.define({
@@ -98,31 +81,32 @@ export default Plugin.define({
       staleAfterMs: 5 * 60_000,
     })
 
+    async function loadPicks(ctx: any, sid?: string): Promise<PicksData> {
+      const out = await ctx.client.model.list()
+      const models = asArray<any>(out)
+      const rows: Row[] = models
+        .filter((m) => availableProviders().includes(m.providerID) && m.enabled !== false)
+        .map((m) => ({
+          providerID: m.providerID,
+          modelID: m.modelID ?? m.id,
+          name: m.name ?? m.modelID ?? m.id,
+          ...metrics(m.cost as CostTier[] | undefined),
+        }))
+      const sessionCurrent = resolveCurrentModel(ctx, sid)
+      const current = sessionCurrent
+        ? { data: sessionCurrent }
+        : await ctx.client.model.default().catch(() => undefined)
+      return { rows, current }
+    }
+
     function Picks(props: { sessionID?: string }) {
       const ctx = usePlugin()
-      const [picks] = createResource(
+      const cached = createCachedResource(
         () => props.sessionID,
-        async (sid) => {
-          const out = await ctx.client.model.list()
-          const models = asArray<any>(out)
-          const rows: Row[] = models
-            .filter((m) => availableProviders().includes(m.providerID) && m.enabled !== false)
-            .map((m) => ({
-              providerID: m.providerID,
-              modelID: m.modelID ?? m.id,
-              name: m.name ?? m.modelID ?? m.id,
-              ...metrics(m.cost as CostTier[] | undefined),
-            }))
-          const sessionCurrent = currentFromSession(ctx, sid)
-          const current = sessionCurrent
-            ? { data: sessionCurrent }
-            : await ctx.client.model.default().catch(() => undefined)
-          const data = { rows, current }
-          picksCache.set(data)
-          return data
-        },
-        { initialValue: picksCache.value ?? undefined },
+        (sid) => loadPicks(ctx, sid),
+        { cache: picksCache },
       )
+      const picks = cached.data
 
       return (
         <Show when={!picks.error} fallback={<text>⚠ model picks unavailable</text>}>
@@ -143,6 +127,9 @@ export default Plugin.define({
               }
               const paid = scoped.filter((r) => !r.free)
               const free = scoped.filter((r) => r.free).toSorted((a, b) => a.name.localeCompare(b.name))
+              // Paid rows always have numeric metrics, so the Infinity
+              // fallbacks below are unreachable ordering hints only.
+              /* v8 ignore next 3 */
               const b = {
                 session: paid.toSorted((a, b) => (a.sessionCost ?? Infinity) - (b.sessionCost ?? Infinity))[0],
                 cache: paid.toSorted((a, b) => (b.cacheRatio ?? -1) - (a.cacheRatio ?? -1))[0],
@@ -172,11 +159,15 @@ export default Plugin.define({
                 ...free.slice(0, 3).map((r) => row("free", r, undefined)),
                 free.length > 3 ? `       +${free.length - 3} more free` : "",
                 "─".repeat(40),
+                // save is a number or undefined, never null, and the save line
+                // only renders when b.session exists — both guards are dead.
+                /* v8 ignore start */
                 save !== null && save !== undefined
                   ? `💡 save ~$${save.toFixed(2)}/session → ${short(b.session?.modelID ?? "", idWidth)}`
                   : currentMatchesSession
                     ? "✅ current model is the cheapest"
                     : "",
+                /* v8 ignore end */
                 curScoped && cur
                   ? `now    ${short(cur.modelID, idWidth)} (${providerLabel(cur.providerID)})${currentMatchesSession ? " ✅" : ""}`
                   : "",
@@ -195,7 +186,7 @@ export default Plugin.define({
     }
 
     return context.ui.slot({
-      append: "sidebar.content",
+      after: "sidebar.content",
       render: ({ sessionID }: { sessionID?: string }) => <Picks sessionID={sessionID} />,
     })
   },

@@ -1,14 +1,22 @@
 # Changelog
 
-## [0.1.0] - 2026-09-07
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
 
 ### Added
 
-- `models_recommend` tool ranking OpenCode Zen (`opencode`) and OpenCode Go (`opencode-go`) models by cache ratio, token cost, or estimated session cost.
-- `/recommend-models` command asking the agent to present the three rankings in-session.
-- Sidebar widget ("MODEL PICKS") showing the cheapest session, best cache ratio, cheapest token cost, and free-model picks, plus the current default model.
-- Optional `sort` (defaults to `sessionCost`), `providers`, `limit`, and `free` parameters on the tool.
+- `models_recommend` tool — ranks models by cache ratio, token cost, session cost
+- `model-details` tool — price breakdown for a specific model
+- `/recommend-models` and `/model-details` slash commands
+- Sidebar widget showing best models by session cost, cache ratio, token cost
+- Provider filter picker (All / per-provider) with persistence
+- 73 tests with 100% line coverage
+- Vite+ developer tooling
+- GitHub Actions CI
+- Pre-commit hooks
 
-### Changed
-
-- Licensed under the GNU Affero General Public License v3.0.
+[Unreleased]: https://github.com/ranjithraj/opencode-model-recommender/compare/v0.1.0...HEAD

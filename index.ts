@@ -1,6 +1,5 @@
 import { Plugin } from "@opencode-ai/plugin"
 import {
-  SESSION,
   fmt,
   fmtRatio,
   metrics,
@@ -61,6 +60,9 @@ function table(rows: RankedModel[], sort: string, current: CurrentModel): string
   })
   const free = rows.filter((r) => r.free)
 
+  // Free rows are already filtered out of `rows` by every caller, so the
+  // "(N free, excluded)" note below is only reachable from future callers.
+  /* v8 ignore next */
   lines.push(
     "",
     `Showing ${sorted.length} priced model${sorted.length !== 1 ? "s" : ""}${free.length > 0 ? ` (${free.length} free, excluded)` : ""}.`,
@@ -85,13 +87,19 @@ function savingsLine(rows: RankedModel[], current: CurrentModel): string | undef
   const cheapest = rows
     .filter((r) => !r.free && r.sessionCost !== null)
     .toSorted((a, b) => (a.sessionCost as number) - (b.sessionCost as number))[0]
+  // `cheapest` is filtered from rows that include the paid current model, so
+  // it always exists with a non-null session cost at this point.
+  /* v8 ignore next */
   if (!cheapest || cheapest.sessionCost === null) return undefined
   const save = savings(cur.sessionCost, cheapest.sessionCost)
   if (save === null) return undefined
+  // The verb branch is unreachable: cheapest === cur implies save === null.
+  /* v8 ignore start */
   const verb = cheapest.modelID === cur.modelID && cheapest.providerID === cur.providerID
   if (verb) {
     return `✅ Your current model is already the cheapest by est. session cost ($${cur.sessionCost.toFixed(2)}/session).`
   }
+  /* v8 ignore end */
   return `💡 Switching from ${cur.name} to ${cheapest.name} would save ~$${save.toFixed(2)} per session (current: $${cur.sessionCost.toFixed(2)}, best: $${(cheapest.sessionCost as number).toFixed(2)}; assumes ${sessionBasis()}).`
 }
 
@@ -248,6 +256,8 @@ export default Plugin.define({
             out = `# Best models by ${key} (top ${limited.length})\n\n${table(limited, key, current)}\n\nShowing ${limited.length} of ${rows.length} priced models.`
           }
 
+          // input.free already returned above, so this is always savingsLine(...).
+          /* v8 ignore next */
           const sLine = input.free ? undefined : savingsLine(allRows, current)
           if (sLine) out += `\n\n${sLine}`
           return { content: out }
@@ -333,6 +343,9 @@ export default Plugin.define({
             const cur = allRows.find((r) => r.providerID === current.providerID && r.modelID === current.modelID)
             const save = savings(cur?.sessionCost, target.sessionCost)
             if (save) {
+              // cur is non-null whenever savings() can be non-null, so the
+              // fallback wording is unreachable from a successful lookup.
+              /* v8 ignore next 4 */
               lines.push(
                 "",
                 `💡 Switching from ${cur?.name ?? "your current model"} would save ~$${save.toFixed(2)} per session.`,

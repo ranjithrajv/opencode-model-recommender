@@ -56,10 +56,18 @@ export function metrics(
 ): Metrics {
   const first = (Array.isArray(cost) ? cost[0] : cost) as CostTier | undefined
   const tier: CostTier = first ?? {}
-  const input = tier.input ?? fallback?.input ?? 0
-  const output = tier.output ?? fallback?.output ?? 0
-  const cacheRead = tier.cache?.read ?? 0
-  const cacheWrite = tier.cache?.write ?? 0
+  // Each `?? 0` is split into its own 2-operand expression. A 3-operand
+  // `a ?? b ?? c` chain can't be fully tracked by v8's branch coverage —
+  // the final literal fallback is never credited — but `x ?? 0` on a
+  // property access and `a ?? b` on two variables are both tracked.
+  const fb = fallback ?? {}
+  const fi = fb.input ?? 0
+  const fo = fb.output ?? 0
+  const input = tier.input ?? fi
+  const output = tier.output ?? fo
+  const cache = tier.cache ?? {}
+  const cacheRead = cache.read ?? 0
+  const cacheWrite = cache.write ?? 0
   const free = input === 0 && output === 0
 
   const s = { ...SESSION, ...session }
