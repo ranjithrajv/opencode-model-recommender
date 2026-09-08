@@ -1,9 +1,17 @@
 # opencode-model-recommender
 
+[![CI](https://github.com/ranjithrajv/opencode-model-recommender/actions/workflows/ci.yml/badge.svg)](https://github.com/ranjithrajv/opencode-model-recommender/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/opencode-model-recommender)](https://www.npmjs.com/package/opencode-model-recommender)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
+
 An [OpenCode](https://opencode.ai) plugin that recommends the best models on
 **OpenCode Zen** (`opencode`) and **OpenCode Go** (`opencode-go`) using live
 catalog pricing. Shares its sidebar building blocks with
-[opencode-plugin-kit](../opencode-plugin-kit).
+[opencode-plugin-kit](https://github.com/ranjithrajv/opencode-plugin-kit).
+
+## Prerequisites
+
+- OpenCode **V2** (plugin API is beta)
 
 ## Metrics
 
@@ -13,6 +21,11 @@ catalog pricing. Shares its sidebar building blocks with
   (agent traffic is input-heavy).
 - **Session cost** — estimated cost of a representative coding session:
   400k input tokens (80% cache reads, 20% cache writes) + 50k output tokens.
+  Override per call:
+
+  ```json
+  { "sort": "sessionCost", "session": { "freshInput": 200000, "cacheReadShare": 0.6, "output": 30000 } }
+  ```
 
 ## Usage
 
@@ -27,28 +40,12 @@ Once loaded, the plugin provides:
 The sidebar widget shows the top picks, free models, and whether your current
 model is already the cheapest — or how much you'd save per session by switching.
 
-### Session-cost assumptions
-
-Session cost assumes 400k input tokens (80% cache reads) + 50k output tokens.
-Override per call:
-
-```json
-{ "sort": "sessionCost", "session": { "freshInput": 200000, "cacheReadShare": 0.6, "output": 30000 } }
-```
-
-## Screenshot
-
-Sidebar widget:
-
-![Model picks sidebar](docs/screenshot.png)
-
-<!-- To capture: install the plugin, open opencode2's TUI, and screenshot the sidebar; save as docs/screenshot.png -->
-
 ## Install
 
 Published on [npm](https://www.npmjs.com/package/opencode-model-recommender).
 
-**Automatic (recommended)** — add it to your OpenCode config (`~/.config/opencode/opencode.json`) and it installs on startup:
+**Config (recommended)** — add it to your OpenCode config (`opencode.json`, e.g.
+`~/.config/opencode/opencode.json`) and it installs on startup:
 
 ```jsonc
 { "plugins": ["opencode-model-recommender"] }
@@ -59,6 +56,19 @@ Published on [npm](https://www.npmjs.com/package/opencode-model-recommender).
 ```sh
 npm install opencode-model-recommender
 ```
+
+**Project-local**:
+
+```sh
+cp -r opencode-model-recommender .opencode/plugins/
+opencode2 service restart
+```
+
+Restart the TUI (or `opencode2 service restart`) after changing the config.
+
+## Remove
+
+Remove the plugin's entry from the `plugins` array in `opencode.json`.
 
 ## Extending to other providers
 
