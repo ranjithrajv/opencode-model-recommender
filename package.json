@@ -1,6 +1,6 @@
 {
   "name": "opencode-model-recommender",
-  "version": "1.0.0-alpha.2",
+  "version": "1.0.0-alpha.3",
   "description": "Recommends the best models on OpenCode Zen and OpenCode Go by cache ratio, token cost, and session cost.",
   "keywords": [
     "cache",

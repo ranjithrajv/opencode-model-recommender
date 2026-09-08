@@ -187,7 +187,7 @@ export default Plugin.define({
     }
 
     return context.ui.slot({
-      after: "sidebar.content",
+      before: "sidebar.footer",
       render: ({ sessionID }: { sessionID?: string }) => <Picks sessionID={sessionID} />,
     })
   },
