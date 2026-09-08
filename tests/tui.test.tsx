@@ -11,7 +11,7 @@ vi.mock("opencode-plugin-kit", async (importOriginal) => ({
 import { createComponent, createRoot, type JSX } from "solid-js"
 import { render } from "solid-js/web"
 import { PluginContextProvider } from "@opencode-ai/plugin/tui"
-import tuiPlugin, { buildFilters } from "./tui.js"
+import tuiPlugin, { buildFilters } from "../tui.js"
 
 const paid = (input: number, output: number, read: number) => [{ input, output, cache: { read } }]
 

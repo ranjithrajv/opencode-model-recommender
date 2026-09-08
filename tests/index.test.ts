@@ -8,7 +8,7 @@ vi.mock("opencode-plugin-kit", async (importOriginal) => ({
   availableProviders: vi.fn(() => ["opencode", "opencode-go"]),
 }))
 
-import plugin from "./index.js"
+import plugin from "../index.js"
 
 type AnyModel = Record<string, unknown>
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { metrics, savings, fmt, fmtRatio, sessionBasis, SESSION } from "./metrics.js"
+import { metrics, savings, fmt, fmtRatio, sessionBasis, SESSION } from "../metrics.js"
 
 describe("metrics", () => {
   test("computes cacheRatio as cacheRead / input", () => {
