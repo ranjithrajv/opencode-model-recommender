@@ -91,6 +91,13 @@ beforeAll(() => {
 })
 
 describe("plugin setup", () => {
+  test("registers both tools as direct tools, not only inside code mode", async () => {
+    // OpenCode 2 defaults tools to codemode: true, which keeps them out of the model's tool
+    // list and reachable only by writing code for the `execute` tool.
+    const f = await setup()
+    for (const t of f.tool.added) expect(t.options).toMatchObject({ namespace: "models", codemode: false })
+  })
+
   test("registers both tools and both commands", async () => {
     const f = await setup()
     expect(f.tool.added.map((t) => t.name).sort()).toEqual(["details", "recommend"])
