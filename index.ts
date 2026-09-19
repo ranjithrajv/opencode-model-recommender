@@ -17,7 +17,7 @@ import { asArray, availableProviders, providerLabel } from "opencode-plugin-kit"
  * Registers:
  *  - `models_recommend` tool that ranks models from OpenCode Zen ("opencode")
  *    and OpenCode Go ("opencode-go") by:
- *      - cacheRatio : cache_read price / input price (higher = cheaper cached tokens)
+ *      - cacheRatio : cache_read price / input price (lower = cheaper cached tokens)
  *      - tokenCost  : blended per-token cost (70% input / 30% output weight)
  *      - sessionCost: estimated cost of a representative coding session
  *  - `model-details` tool / `/model-details` command showing a price
@@ -71,7 +71,7 @@ function table(rows: RankedModel[], sort: string, current: CurrentModel): string
   lines.push(
     "",
     "Definitions:",
-    "- Cache ratio = cache-read price / input price. Higher means cached context is cheaper relative to fresh input.",
+    "- Cache ratio = cache-read price / input price. Lower means cached context is cheaper relative to fresh input.",
     "- Blended $/M = 0.7 × input + 0.3 × output (typical agent mix is input-heavy).",
     `- Est. session cost assumes ${sessionBasis()}.`,
   )
@@ -169,7 +169,7 @@ export default Plugin.define({
               type: "string",
               enum: ["cacheRatio", "tokenCost", "sessionCost"],
               description:
-                "Ranking metric. cacheRatio: best cached-context value (descending). tokenCost: cheapest blended per-token cost. sessionCost: cheapest estimated full coding session. Defaults to sessionCost.",
+                "Ranking metric. cacheRatio: cheapest cached context relative to fresh input (lowest ratio first). tokenCost: cheapest blended per-token cost. sessionCost: cheapest estimated full coding session. Defaults to sessionCost.",
             },
             providers: {
               type: "array",
@@ -235,7 +235,8 @@ export default Plugin.define({
             }
           }
 
-          // cacheRatio ranks descending (higher = better); others ascending (cheaper = better).
+          // Every metric ranks ascending: a lower cacheRatio is a cheaper cache read, and the
+          // others are costs. Sorting before the limit decides WHICH rows are kept.
           if (input.free) {
             // Free models have no pricing metrics — list them by name.
             const freeRows = rows.toSorted((a, b) => a.name.localeCompare(b.name))
@@ -248,9 +249,10 @@ export default Plugin.define({
           }
 
           const key = sort
-          const sorted = [...rows].sort((a, b) =>
-            key === "cacheRatio" ? (b[key] as number) - (a[key] as number) : (a[key] as number) - (b[key] as number),
-          )
+          // A null metric (e.g. no listed cache-read price) sorts last, so it never takes a
+          // `limit` slot from a priced model.
+          const rank = (r: RankedModel) => r[key] ?? Number.POSITIVE_INFINITY
+          const sorted = [...rows].sort((a, b) => (rank(a) as number) - (rank(b) as number))
           const limited = typeof input.limit === "number" && input.limit > 0 ? sorted.slice(0, input.limit) : sorted
 
           let out = `# Best models by ${key}\n\n${table(sorted, key, current)}`
@@ -376,7 +378,7 @@ export default Plugin.define({
             sessionID,
             text:
               "Use the models_recommend tool to list the best models on OpenCode Zen and OpenCode Go. " +
-              "Show three short rankings: best cache ratio (descending), cheapest token cost, and cheapest estimated session cost. " +
+              "Show three short rankings: best (lowest) cache ratio, cheapest token cost, and cheapest estimated session cost. " +
               "Also report how my current model compares and whether switching would save money. " +
               (prompt.text?.trim() ? `Additional criteria from the user: ${prompt.text}` : ""),
             delivery,

@@ -179,7 +179,7 @@ describe("Picks sidebar widget", () => {
     const s = text(t)
     expect(s).toContain("MODEL PICKS · all (all)")
     expect(s).toContain("sess$ cheap (zen) $0.26")
-    expect(s).toContain("cache cache-king (zen) 0.50x")
+    expect(s).toContain("cache cheap (zen) 0.25x")
     expect(s).toContain("token cheap (zen) $1.300/M")
     expect(s).toContain("free free-a (zen)")
     expect(s).toContain("free free-b (zen)")

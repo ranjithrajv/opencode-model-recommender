@@ -3,7 +3,7 @@
  * (index.ts) and the sidebar widget (tui.tsx).
  *
  * Metrics:
- *  - cacheRatio : cache_read price / input price (higher = cheaper cached tokens)
+ *  - cacheRatio : cache_read price / input price (lower = cheaper cached tokens)
  *  - tokenCost  : blended per-token cost (70% input / 30% output weight)
  *  - sessionCost: estimated cost of a representative coding session
  */
@@ -72,7 +72,9 @@ export function metrics(
 
   const s = { ...SESSION, ...session }
 
-  const cacheRatio = input > 0 ? cacheRead / input : null
+  // An unlisted cache-read price is unknown, not free; only an explicit price gets a ratio.
+  const hasCacheReadPrice = cache.read !== undefined
+  const cacheRatio = input > 0 && hasCacheReadPrice ? cacheRead / input : null
   const tokenCost = input + output > 0 ? 0.7 * input + 0.3 * output : null
 
   // Providers that don't itemize cache writes charge input price.

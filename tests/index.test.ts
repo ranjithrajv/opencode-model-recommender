@@ -153,7 +153,38 @@ describe("models_recommend", () => {
     expect(out.content).toContain("No models found for providers: opencode, opencode-go (free only).")
   })
 
-  test("sorts by cacheRatio descending", async () => {
+  test("keeps the lowest cache ratios when limited (cache reads cheapest relative to input)", async () => {
+    // cacheRatio = cache-read price / input price, so a LOWER ratio is the better cache deal:
+    // cheap reads cached context at 25% of its input price, cache-king at 50%.
+    const f = await setup()
+    const out = await rec(f).execute({ sort: "cacheRatio", providers: ["opencode"], limit: 1 })
+    expect(out.content).toContain("cheap")
+    expect(out.content).not.toContain("cache-king")
+    expect(out.content).not.toContain("pricey")
+  })
+
+  test("ranks models with no cache ratio last before applying the limit", async () => {
+    const f = await setup({
+      catalog: {
+        model: {
+          list: vi.fn(async () => ({
+            data: [
+              model("no-cache-price", "opencode", [{ input: 1, output: 2 }]),
+              model("input-free", "opencode", [{ input: 0, output: 1, cache: { read: 0 } }]),
+              model("cheap", "opencode", [{ input: 1, output: 2, cache: { read: 0.25, write: 1 } }]),
+            ],
+          })),
+          default: vi.fn(),
+        },
+      },
+    })
+    const out = await rec(f).execute({ sort: "cacheRatio", providers: ["opencode"], limit: 1 })
+    expect(out.content).toContain("cheap")
+    expect(out.content).not.toContain("no-cache-price")
+    expect(out.content).not.toContain("No models with pricing data matched")
+  })
+
+  test("sorts by cacheRatio ascending", async () => {
     const f = await setup()
     const out = await rec(f).execute({ sort: "cacheRatio", providers: ["opencode"] })
     expect(out.content).toContain("# Best models by cacheRatio")
