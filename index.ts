@@ -108,8 +108,12 @@ function savingsLine(rows: RankedModel[], current: CurrentModel): string | undef
 export default Plugin.define({
   id: "model-recommender",
   async setup(ctx) {
+    // OpenCode 2.0.4 removed ctx.catalog; the same model domain is ctx.model there, whose list()
+    // and default() return { location, data }. Prefer catalog so earlier hosts keep working.
+    const models = () => (ctx as any).catalog?.model ?? (ctx as any).model
+
     const loadCatalog = async () => {
-      const listOutput = await ctx.catalog.model.list()
+      const listOutput = await models().list()
       // list() returns { data: ModelInfo[] }; tolerate a bare array too.
       const catalogModels: any[] = asArray(listOutput)
       return catalogModels
@@ -117,7 +121,7 @@ export default Plugin.define({
 
     const currentModel = async (): Promise<CurrentModel> => {
       try {
-        const out = (await ctx.catalog.model.default()) as { data?: { providerID: string; modelID: string } | null }
+        const out = (await models().default()) as { data?: { providerID: string; modelID: string } | null }
         return out?.data ? { providerID: out.data.providerID, modelID: out.data.modelID } : undefined
       } catch {
         return undefined

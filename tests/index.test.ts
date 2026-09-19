@@ -98,6 +98,35 @@ describe("plugin setup", () => {
   })
 })
 
+describe("OpenCode 2.0.4+ context (no ctx.catalog)", () => {
+  // 2.0.4 removed ctx.catalog; the model domain is ctx.model, and on 2.0.7 its list() and
+  // default() return { location, data } (observed on a live host).
+  const opencode2 = () => ({
+    catalog: undefined,
+    model: {
+      list: vi.fn(async () => ({ location: { directory: "/p" }, data: structuredClone(CATALOG) })),
+      default: vi.fn(async () => ({
+        location: { directory: "/p" },
+        data: { id: "cheap", modelID: "cheap", providerID: "opencode", name: "cheap" },
+      })),
+    },
+  })
+
+  test("models_recommend ranks from ctx.model", async () => {
+    const f = await setup(opencode2())
+    const out = await rec(f).execute({ sort: "tokenCost", providers: ["opencode"] })
+    expect(out.content).toContain("# Best models by tokenCost")
+    expect(out.content.indexOf("cheap")).toBeLessThan(out.content.indexOf("pricey"))
+  })
+
+  test("models_details resolves the default model from ctx.model", async () => {
+    const f = await setup({ ...opencode2(), session: undefined })
+    const out = await details(f).execute({})
+    expect(out.content).toContain("cheap")
+    expect(out.content).not.toContain("Model not found")
+  })
+})
+
 describe("models_recommend", () => {
   test("returns the no-models message for an empty catalog", async () => {
     const f = await setup({
