@@ -1,5 +1,7 @@
-import { appendFileSync as __afs } from "node:fs";
-try { __afs("/tmp/opencode/markers.log", new Date().toISOString() + " EVAL model-recommender/tui.tsx\n") } catch {}
+import { appendFileSync as __afs } from "node:fs"
+try {
+  __afs("/tmp/opencode/markers.log", new Date().toISOString() + " EVAL model-recommender/tui.tsx\n")
+} catch {}
 import { Plugin, usePlugin } from "@opencode/plugin/tui"
 import { For, Show } from "solid-js"
 import {
