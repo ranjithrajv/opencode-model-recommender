@@ -26,7 +26,7 @@ function emptyCtx() {
     keymap: { layer: () => {} },
     options: {},
     location: { directory: "/nonexistent-project" },
-    theme: { text: { default: "#fff", subdued: "#888" } },
+    theme: { text: { base: "#fff", muted: "#888" } },
   }
   return { ctx, slots, stores }
 }
@@ -51,8 +51,8 @@ describe("cold start", () => {
     const cleanup = await plugin.setup(ctx)
     expect(typeof cleanup).toBe("function")
     // Both the sidebar slot and the keymap-layer app slot are registered.
-    const targets = slots.map((s) => s.after ?? s.append ?? s.replace)
-    expect(targets).toContain("sidebar.content")
+    const targets = slots.map((s) => s.before ?? s.after ?? s.append ?? s.replace)
+    expect(targets).toContain("sidebar.footer")
     expect(targets).toContain("app")
     expect(() => cleanup()).not.toThrow()
   })

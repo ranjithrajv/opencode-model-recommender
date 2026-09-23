@@ -12,7 +12,7 @@ export default defineConfig({
     // Keep solid (and the plugin's tui entry) processed by Vite so the
     // browser/dev builds below are used for every copy — Node's own
     // resolution would otherwise load the server build.
-    server: { deps: { inline: [/solid-js/, /@opencode-ai\/plugin/] } },
+    server: { deps: { inline: [/solid-js/, /@opencode\/plugin/] } },
     include: ["**/*.test.ts", "**/*.test.tsx"],
     coverage: {
       provider: "v8",

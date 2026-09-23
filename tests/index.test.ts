@@ -46,12 +46,12 @@ function fakeCtx(overrides: CtxOverrides = {}) {
   const tool = fakeEditor()
   const command = fakeEditor()
   const prompt = vi.fn(async (_input: unknown) => {})
+  // v2 exposes the model domain directly on the context (previously `catalog.model`).
+  const { catalog, ...rest } = overrides as { catalog?: { model?: unknown } }
   const ctx = {
-    catalog: {
-      model: {
-        list: vi.fn(async () => ({ data: structuredClone(CATALOG) })),
-        default: vi.fn(async () => ({ data: { providerID: "opencode", modelID: "cheap" } })),
-      },
+    model: catalog?.model ?? {
+      list: vi.fn(async () => ({ data: structuredClone(CATALOG) })),
+      default: vi.fn(async () => ({ data: { providerID: "opencode", modelID: "cheap" } })),
     },
     session: {
       get: vi.fn(async () => ({ data: { model: { providerID: "opencode", id: "pricey" } } })),
@@ -59,7 +59,7 @@ function fakeCtx(overrides: CtxOverrides = {}) {
     },
     tool: { transform: vi.fn(async (fn: (e: unknown) => unknown) => fn(tool.editor)) },
     command: { transform: vi.fn(async (fn: (e: unknown) => unknown) => fn(command.editor)) },
-    ...overrides,
+    ...rest,
   }
   return { ctx: ctx as never, tool, command, prompt, raw: ctx }
 }
@@ -326,7 +326,7 @@ describe("models_recommend", () => {
   test("reads the current model without a sessionID context", async () => {
     const f = await setup()
     await rec(f).execute({}, undefined)
-    expect(f.raw.catalog.model.default).toHaveBeenCalled()
+    expect(f.raw.model.default).toHaveBeenCalled()
   })
 })
 

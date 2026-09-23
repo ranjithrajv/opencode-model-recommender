@@ -1,4 +1,4 @@
-import { Plugin } from "@opencode-ai/plugin"
+import { Plugin } from "@opencode/plugin"
 import {
   fmt,
   fmtRatio,
@@ -109,7 +109,7 @@ export default Plugin.define({
   id: "model-recommender",
   async setup(ctx) {
     const loadCatalog = async () => {
-      const listOutput = await ctx.catalog.model.list()
+      const listOutput = await ctx.model.list()
       // list() returns { data: ModelInfo[] }; tolerate a bare array too.
       const catalogModels: any[] = asArray(listOutput)
       return catalogModels
@@ -117,7 +117,7 @@ export default Plugin.define({
 
     const currentModel = async (): Promise<CurrentModel> => {
       try {
-        const out = (await ctx.catalog.model.default()) as { data?: { providerID: string; modelID: string } | null }
+        const out = (await ctx.model.default()) as { data?: { providerID: string; modelID: string } | null }
         return out?.data ? { providerID: out.data.providerID, modelID: out.data.modelID } : undefined
       } catch {
         return undefined

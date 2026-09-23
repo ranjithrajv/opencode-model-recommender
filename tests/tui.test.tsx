@@ -10,7 +10,7 @@ vi.mock("opencode-plugin-kit", async (importOriginal) => ({
 
 import { createComponent, createRoot, type JSX } from "solid-js"
 import { render } from "solid-js/web"
-import { PluginContextProvider } from "@opencode-ai/plugin/tui"
+import { PluginContextProvider } from "@opencode/plugin/tui"
 import tuiPlugin, { buildFilters } from "../tui.js"
 
 const paid = (input: number, output: number, read: number) => [{ input, output, cache: { read } }]
@@ -71,7 +71,7 @@ function fakeTuiCtx(
       },
       integration: { list: vi.fn(async () => ({ data: [] })) },
     },
-    theme: { text: { default: "#fff", subdued: "#888" } },
+    theme: { text: { base: "#fff", muted: "#888" } },
   }
   return { ctx: ctx as never, raw: ctx as any, slotCalls, layerCalls, toastCalls, messages }
 }
@@ -98,7 +98,7 @@ function appCommand(f: ReturnType<typeof fakeTuiCtx>): {
 async function setupTui(opts: Parameters<typeof fakeTuiCtx>[0] = {}) {
   const f = fakeTuiCtx(opts)
   await tuiPlugin.setup(f.ctx)
-  const sidebar = f.slotCalls.find((s) => s.after === "sidebar.content")
+  const sidebar = f.slotCalls.find((s) => s.before === "sidebar.footer")
   expect(sidebar).toBeDefined()
   return f
 }
@@ -110,7 +110,7 @@ beforeEach(() => {
 })
 
 function mountPicks(f: ReturnType<typeof fakeTuiCtx>, sessionID?: string): () => string {
-  const slot = f.slotCalls.find((s) => s.after === "sidebar.content")
+  const slot = f.slotCalls.find((s) => s.before === "sidebar.footer")
   let root: JSX.Element
   createRoot((dispose) => {
     cleanups.push(dispose)
