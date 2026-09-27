@@ -202,7 +202,9 @@ export default Plugin.define({
           required: [],
           additionalProperties: false,
         },
-        options: { namespace: "models", codemode: true },
+        // codemode: false keeps the tool in the model's direct tool list (OpenCode 2 defaults
+        // to true, which exposes it only through code written for the `execute` tool).
+        options: { namespace: "models", codemode: false },
         execute: async (rawInput, context) => {
           const input = rawInput as {
             sort?: "cacheRatio" | "tokenCost" | "sessionCost"
@@ -292,7 +294,9 @@ export default Plugin.define({
           },
           additionalProperties: false,
         },
-        options: { namespace: "models", codemode: true },
+        // codemode: false keeps the tool in the model's direct tool list (OpenCode 2 defaults
+        // to true, which exposes it only through code written for the `execute` tool).
+        options: { namespace: "models", codemode: false },
         execute: async (rawInput, context) => {
           const input = rawInput as { providerID?: string; modelID?: string; session?: SessionAssumptions }
           const [catalogModels, current] = await Promise.all([
