@@ -11,7 +11,7 @@ catalog pricing. Shares its sidebar building blocks with
 
 ## Prerequisites
 
-- OpenCode **V2** (plugin API is beta)
+- OpenCode **V2.0.3 or newer** (plugin API is beta). 2.0.3 is the floor: earlier 2.x releases ship no `./tui` subpath export, so the TUI entrypoint cannot resolve `@opencode/plugin/tui`.
 
 ## Metrics
 

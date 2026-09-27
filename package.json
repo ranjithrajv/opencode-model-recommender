@@ -1,6 +1,6 @@
 {
   "name": "opencode-model-recommender",
-  "version": "1.0.0-alpha.5",
+  "version": "1.0.0-alpha.6",
   "description": "Recommends the best models on OpenCode Zen and OpenCode Go by cache ratio, token cost, and session cost.",
   "keywords": [
     "cache",
@@ -36,7 +36,7 @@
     "test:coverage": "vitest run --coverage.enabled"
   },
   "dependencies": {
-    "@opencode/plugin": "^2.0.15",
+    "@opencode/plugin": "^2.0.3",
     "opencode-plugin-kit": "^1.0.0-alpha.6",
     "solid-js": "^1.9.12"
   },

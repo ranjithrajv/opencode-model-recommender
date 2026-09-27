@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [1.0.0-alpha.6] - 2026-09-27
+
+### Changed
+
+- Widened the `@opencode/plugin` range from `^2.0.15` to `^2.0.3`, matching
+  what the plugin actually supports. Verified by typecheck and runtime import
+  against 2.0.3, 2.0.10 and 2.0.18. **2.0.3 is the floor**: earlier 2.x
+  releases ship no `./tui` subpath export, so the TUI entrypoint cannot
+  resolve `@opencode/plugin/tui`.
+
+### Added
+
+- A runtime host-compat probe in CI: packs the real tarball, installs it into a
+  clean project, and imports both entrypoints under Bun. Typecheck cannot catch
+  a peer-only runtime dependency, because the dev tree always resolves it.
+
 ## [1.0.0-alpha.5] - 2026-09-27
 
 ### Fixed
@@ -55,7 +71,8 @@ and this project adheres to [Semantic Versioning](://semver.org/spec/v2.0.0.html
 - Provider filter picker (All / per-provider) with persistence
 - Providers default to connected providers discovered from auth.json (new providers appear without code changes)
 
-[Unreleased]: https://github.com/ranjithraj/opencode-model-recommender/compare/v1.0.0-alpha.5...HEAD
-[1.0.0-alpha.5]: https://github.com/ranjithraj/opencode-model-recommender/releases/tag/v1.0.0-alpha.5
-[1.0.0-alpha.4]: https://github.com/ranjithraj/opencode-model-recommender/releases/tag/v1.0.0-alpha.4
+[Unreleased]: https://github.com/ranjithraj/opencode-model-recommender/compare/v1.0.0-alpha.6...HEAD
 [0.1.0]: https://github.com/ranjithraj/opencode-model-recommender/releases/tag/v0.1.0
+[1.0.0-alpha.4]: https://github.com/ranjithraj/opencode-model-recommender/releases/tag/v1.0.0-alpha.4
+[1.0.0-alpha.5]: https://github.com/ranjithraj/opencode-model-recommender/releases/tag/v1.0.0-alpha.5
+[1.0.0-alpha.6]: https://github.com/ranjithraj/opencode-model-recommender/releases/tag/v1.0.0-alpha.6
