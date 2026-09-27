@@ -133,7 +133,7 @@ export default Plugin.define({
               /* v8 ignore start */
               const b = {
                 session: paid.toSorted((a, b) => (a.sessionCost ?? Infinity) - (b.sessionCost ?? Infinity))[0],
-                cache: paid.toSorted((a, b) => (b.cacheRatio ?? -1) - (a.cacheRatio ?? -1))[0],
+                cache: paid.toSorted((a, b) => (a.cacheRatio ?? Infinity) - (b.cacheRatio ?? Infinity))[0],
                 token: paid.toSorted((a, b) => (a.tokenCost ?? Infinity) - (b.tokenCost ?? Infinity))[0],
               }
               /* v8 ignore stop */

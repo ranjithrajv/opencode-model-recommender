@@ -15,7 +15,7 @@ catalog pricing. Shares its sidebar building blocks with
 
 ## Metrics
 
-- **Cache ratio** — cache-read price ÷ input price. Higher = cached context
+- **Cache ratio** — cache-read price ÷ input price. Lower = cached context
   (the bulk of agent traffic) is relatively cheaper.
 - **Token cost** — blended $/1M tokens: `0.7 × input + 0.3 × output`
   (agent traffic is input-heavy).

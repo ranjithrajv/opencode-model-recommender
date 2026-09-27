@@ -7,6 +7,13 @@ describe("metrics", () => {
     expect(r.cacheRatio).toBeCloseTo(0.2)
   })
 
+  test("cacheRatio is null when the tier lists no cache-read price", () => {
+    // An unknown cache price is not a free cache: a 0 here would rank as the best cache deal.
+    expect(metrics([{ input: 1, output: 1 }]).cacheRatio).toBeNull()
+    expect(metrics([{ input: 1, output: 1, cache: {} }]).cacheRatio).toBeNull()
+    expect(metrics([{ input: 1, output: 1, cache: { read: 0 } }]).cacheRatio).toBe(0)
+  })
+
   test("cacheRatio is null when input is 0", () => {
     const r = metrics([{ input: 0, output: 0 }])
     expect(r.cacheRatio).toBeNull()
