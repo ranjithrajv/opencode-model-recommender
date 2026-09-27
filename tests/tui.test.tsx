@@ -11,7 +11,7 @@ vi.mock("opencode-plugin-kit", async (importOriginal) => ({
 import { createComponent, createRoot, type JSX } from "solid-js"
 import { render } from "solid-js/web"
 import { PluginContextProvider } from "@opencode/plugin/tui"
-import tuiPlugin, { buildFilters } from "../tui.js"
+import tuiPlugin, { buildFilters, budgetFor, columnFor } from "../tui.js"
 
 const paid = (input: number, output: number, read: number) => [{ input, output, cache: { read } }]
 
@@ -131,6 +131,37 @@ function text(t: () => string): string {
   return t().replace(/\s+/g, " ").trim()
 }
 
+/** One entry per rendered <text> row, so width assertions can be per-line. */
+function lines(): string[] {
+  return [...document.querySelectorAll("text")].map((e) => e.textContent ?? "")
+}
+
+describe("sidebar width fitting", () => {
+  test("assumes the fallback width until the first layout lands", () => {
+    expect(budgetFor(0)).toBe(38)
+  })
+
+  test("reserves the gutter from a measured width", () => {
+    expect(budgetFor(24)).toBe(22)
+    expect(budgetFor(41)).toBe(39)
+  })
+
+  test("never drops below the minimum row width", () => {
+    expect(budgetFor(4)).toBe(12)
+    expect(budgetFor(1)).toBe(12)
+  })
+
+  test("clamps the id column so label, id and tag fit the budget", () => {
+    // Narrow: the id column gives way so the row still fits.
+    expect(columnFor(22, 30)).toBe(6)
+    // Default fallback: 38 - 18 leaves 20 columns for the id.
+    expect(columnFor(38, 30)).toBe(20)
+    // Wide enough: the ids get what they asked for, still capped at 30.
+    expect(columnFor(80, 12)).toBe(12)
+    expect(columnFor(80, 44)).toBe(30)
+  })
+})
+
 describe("buildFilters", () => {
   test("starts with All and maps each authenticated provider to a filter", () => {
     const filters = buildFilters()
@@ -192,6 +223,26 @@ describe("Picks sidebar widget", () => {
     expect(s).not.toContain("disabled")
     expect(s).not.toContain("outsider")
     expect(s).not.toContain("go-1")
+  })
+
+  test("fits the rule and every table row inside the sidebar budget", async () => {
+    const f = await setupTui({
+      messages: [{ info: { type: "assistant", model: { providerID: "opencode", id: "cache-king" } } }],
+    })
+    const t = mountPicks(f, "s1")
+    await vi.waitFor(() => expect(text(t)).toContain("MODEL PICKS"))
+
+    // No layout runs under happy-dom, so the widget uses the fallback width less
+    // the gutter. The rule is no longer the old fixed 40 cells, and the rows the
+    // widget sizes itself all fit. Fixed prose (basis/save) is clipped by the
+    // container rather than truncated, so it is not asserted here.
+    const budget = budgetFor(0)
+    const rule = lines().find((l) => /^─+$/.test(l))
+    expect(rule).toBeDefined()
+    expect(rule).toHaveLength(budget)
+    const rows = lines().filter((l) => /^(sess\$|cache|token|free) /.test(l))
+    expect(rows.length).toBeGreaterThan(0)
+    for (const l of rows) expect(l.length).toBeLessThanOrEqual(budget)
   })
 
   test("marks the cheapest current model as matching the session", async () => {

@@ -1,6 +1,6 @@
 /** @jsxImportSource @opentui/solid */
 import { Plugin, usePlugin } from "@opencode/plugin/tui"
-import { For, Show } from "solid-js"
+import { createSignal, For, Show } from "solid-js"
 import {
   asArray,
   availableProviders,
@@ -24,6 +24,35 @@ type Row = {
   tokenCost: number | null
   sessionCost: number | null
   free: boolean
+}
+
+/** Width assumed until the first layout pass measures the real sidebar. */
+const FALLBACK_WIDTH = 40
+
+/** Per-side padding the host reserves around slot content. */
+const GUTTER = 2
+
+/** Non-negotiable width of a rendered row: label, id column and provider tag. */
+const MIN_ROW = 12
+
+/** Widest the model-id column ever grows, regardless of sidebar size. */
+const MAX_ID = 30
+
+/**
+ * Usable content width for a measured sidebar width. `avail` is 0 until the
+ * first layout pass lands, in which case the fallback keeps today's layout.
+ */
+export function budgetFor(avail: number): number {
+  return Math.max(MIN_ROW, (avail > 0 ? avail : FALLBACK_WIDTH) - GUTTER)
+}
+
+/**
+ * Model-id column width for a row budget. `wanted` is the width the ids would
+ * like; the rest of the row (6-char label, spaces, `(tag)`) is paid for first so
+ * the row cannot spill past the sidebar and wrap onto a second line.
+ */
+export function columnFor(budget: number, wanted: number): number {
+  return Math.min(wanted, MAX_ID, Math.max(6, budget - 18))
 }
 
 // ---------------------------------------------------------------------------
@@ -102,6 +131,13 @@ export default Plugin.define({
 
     function Picks(props: { sessionID?: string }) {
       const ctx = usePlugin()
+      // The sidebar slot publishes only { sessionID } — no width — so measure the
+      // laid-out box instead. `layout-changed` is emitted from calculateLayout()
+      // on every relayout (including terminal resize) and carries no payload,
+      // so the handler just re-reads the element's current width.
+      const [avail, setAvail] = createSignal(0)
+      let boxEl: { width?: number } | undefined
+      const measure = () => setAvail(boxEl?.width ?? 0)
       const cached = createCachedResource(
         () => props.sessionID,
         (sid) => loadPicks(ctx, sid),
@@ -120,9 +156,13 @@ export default Plugin.define({
                 : p().rows
               if (scoped.length === 0) {
                 return (
-                  <box flexDirection="column">
-                    <text>MODEL PICKS · {active.title.toLowerCase()}</text>
-                    <text>no models for this provider</text>
+                  <box flexDirection="column" width="100%" overflow="hidden">
+                    <text wrapMode="none" overflow="hidden">
+                      MODEL PICKS · {active.title.toLowerCase()}
+                    </text>
+                    <text wrapMode="none" overflow="hidden">
+                      no models for this provider
+                    </text>
                   </box>
                 )
               }
@@ -146,12 +186,19 @@ export default Plugin.define({
               const save = currentRow ? savings(currentRow.sessionCost, b.session?.sessionCost) : undefined
               const currentMatchesSession = !!cur && !!b.session && cur.modelID === b.session.modelID
 
-              // Dynamic column width so nothing silently truncates.
+              // Dynamic column width so nothing silently truncates, then clamp
+              // it to the measured sidebar so a row can never wrap onto a second
+              // line.
               const shown = [b.session, b.cache, b.token, ...free.slice(0, 3)].filter(Boolean) as Row[]
-              const idWidth = Math.min(Math.max(10, ...shown.map((r) => short(r.modelID).length)), 30)
+              const budget = budgetFor(avail())
+              const idWidth = columnFor(budget, Math.max(10, ...shown.map((r) => short(r.modelID).length)))
 
               const row = (label: string, r: Row | undefined, value: string | undefined): string =>
                 r ? line(label, r.modelID, r.providerID, value, idWidth) : ""
+
+              // Separator spans the usable width rather than a fixed 40 cells,
+              // which wrapped onto the next line on narrow sidebars.
+              const rule = "─".repeat(Math.max(1, budget))
 
               const lines = [
                 `MODEL PICKS · ${active.title.toLowerCase()}${active.providers.length === 0 ? " (all)" : ""}`,
@@ -160,7 +207,7 @@ export default Plugin.define({
                 row("token", b.token, b.token ? `$${b.token.tokenCost?.toFixed(3)}/M` : undefined),
                 ...free.slice(0, 3).map((r) => row("free", r, undefined)),
                 free.length > 3 ? `       +${free.length - 3} more free` : "",
-                "─".repeat(40),
+                rule,
                 // save is a number or undefined, never null, and the save line
                 // only renders when b.session exists — both guards are dead.
                 /* v8 ignore start */
@@ -177,8 +224,23 @@ export default Plugin.define({
               ].filter(Boolean)
 
               return (
-                <box flexDirection="column">
-                  <For each={lines}>{(l) => <text>{l}</text>}</For>
+                <box
+                  flexDirection="column"
+                  width="100%"
+                  overflow="hidden"
+                  ref={(el: { width?: number }) => {
+                    boxEl = el
+                    measure()
+                  }}
+                  on:layout-changed={measure}
+                >
+                  <For each={lines}>
+                    {(l) => (
+                      <text wrapMode="none" overflow="hidden">
+                        {l}
+                      </text>
+                    )}
+                  </For>
                 </box>
               )
             }}
