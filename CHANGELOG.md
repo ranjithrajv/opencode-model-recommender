@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [1.0.0-alpha.5] - 2026-09-27
+
+### Fixed
+
+- `@opencode/plugin` is now a real dependency instead of a peer. The plugin
+  calls `Plugin.define()`, which is a runtime function, so a peer-only
+  declaration left `@opencode/plugin` uninstalled — installing this package
+  produced a plugin that failed to load with `Cannot find module
+'@opencode/plugin'`. Pinned to `^2.0.15` so the host the runtime provides is
+  the one that gets used.
+- `opencode-plugin-kit` moved to `dependencies` for the same reason: it is
+  imported at runtime, not just for types.
+- `solid-js` moved from a peer to a dependency. The kit's barrel export pulls
+  in `createSignal`/`createResource` from it, and `tui.tsx` imports `For`/`Show`
+  directly, so a peer-only declaration left it uninstalled.
+- Added the `/** @jsxImportSource @opentui/solid */` pragma to `tui.tsx`. Bun
+  ignores `tsconfig.json` inside `node_modules`, so without the file-level
+  pragma it fell back to React's JSX runtime and the TUI entrypoint failed to
+  load with `Cannot find package 'react'`.
+
 ## [1.0.0-alpha.4] - 2026-09-27
 
 ### Breaking
@@ -35,6 +55,7 @@ and this project adheres to [Semantic Versioning](://semver.org/spec/v2.0.0.html
 - Provider filter picker (All / per-provider) with persistence
 - Providers default to connected providers discovered from auth.json (new providers appear without code changes)
 
-[Unreleased]: https://github.com/ranjithraj/opencode-model-recommender/compare/v1.0.0-alpha.4...HEAD
+[Unreleased]: https://github.com/ranjithraj/opencode-model-recommender/compare/v1.0.0-alpha.5...HEAD
+[1.0.0-alpha.5]: https://github.com/ranjithraj/opencode-model-recommender/releases/tag/v1.0.0-alpha.5
 [1.0.0-alpha.4]: https://github.com/ranjithraj/opencode-model-recommender/releases/tag/v1.0.0-alpha.4
 [0.1.0]: https://github.com/ranjithraj/opencode-model-recommender/releases/tag/v0.1.0
