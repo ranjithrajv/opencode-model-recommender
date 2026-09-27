@@ -11,8 +11,10 @@ export default defineConfig({
     environment: "happy-dom",
     // Keep solid (and the plugin's tui entry) processed by Vite so the
     // browser/dev builds below are used for every copy — Node's own
-    // resolution would otherwise load the server build.
-    server: { deps: { inline: [/solid-js/, /@opencode\/plugin/] } },
+    // resolution would otherwise load the server build. The kit ships
+    // TypeScript source, so it must be inlined too or a registry install
+    // would be externalized and fail to load.
+    server: { deps: { inline: [/solid-js/, /@opencode\/plugin/, /opencode-plugin-kit/] } },
     include: ["**/*.test.ts", "**/*.test.tsx"],
     coverage: {
       provider: "v8",
