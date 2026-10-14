@@ -11,7 +11,7 @@ vi.mock("opencode-plugin-kit", async (importOriginal) => ({
 import { createComponent, createRoot, type JSX } from "solid-js"
 import { render } from "solid-js/web"
 import { PluginContextProvider } from "@opencode/plugin/tui"
-import tuiPlugin, { buildFilters, budgetFor, columnFor } from "../tui.js"
+import tuiPlugin, { buildFilters, budgetFor, columnFor, compactFor } from "../tui.js"
 import { availableProviders } from "opencode-plugin-kit"
 
 const paid = (input: number, output: number, read: number) => [{ input, output, cache: { read } }]
@@ -152,6 +152,12 @@ describe("sidebar width fitting", () => {
     expect(budgetFor(1)).toBe(12)
   })
 
+  test("compactFor toggles compact mode on narrow budgets", () => {
+    expect(compactFor(19)).toBe(true)
+    expect(compactFor(20)).toBe(false)
+    expect(compactFor(38)).toBe(false)
+  })
+
   test("clamps the id column so label, id and tag fit the budget", () => {
     // Narrow: the id column gives way so the row still fits.
     expect(columnFor(22, 30)).toBe(6)
@@ -193,7 +199,7 @@ describe("Picks sidebar widget", () => {
     const f = await setupTui({
       messages: [{ info: { type: "assistant", model: { providerID: "opencode", id: "cache-king" } } }],
     })
-    expect(f.raw.ui.slot).toHaveBeenCalledTimes(2)
+    expect(f.raw.ui.slot).toHaveBeenCalledTimes(3)
     const cmd = appCommand(f)
     expect(f.raw.keymap.layer).toHaveBeenCalledTimes(1)
     expect(cmd.id).toBe("models.view")
@@ -215,6 +221,25 @@ describe("Picks sidebar widget", () => {
     const f = await setupTui({ list: () => Promise.reject(new Error("boom")) })
     const t = mountPicks(f, "s1")
     await vi.waitFor(() => expect(text(t)).toContain("⚠ model picks unavailable"))
+  })
+
+  test("expands the free list when the expand toggle is on", async () => {
+    const f = await setupTui({
+      messages: [{ info: { type: "assistant", model: { providerID: "opencode", id: "cache-king" } } }],
+    })
+    const appSlots = f.slotCalls.filter((s) => s.append === "app")
+    expect(appSlots).toHaveLength(2)
+    appSlots.forEach((s) => s.render())
+    const toggleCmd = f.layerCalls[1].commands[0] as { run: () => Promise<void> }
+    await toggleCmd.run()
+    const t = mountPicks(f, "s1")
+    await vi.waitFor(() => expect(text(t)).toContain("MODEL PICKS"))
+    const s = text(t)
+    expect(s).toContain("free free-a (zen)")
+    expect(s).toContain("free free-b (zen)")
+    expect(s).toContain("free free-c (zen)")
+    expect(s).toContain("free free-d (zen)")
+    expect(s).not.toContain("+1 more free")
   })
 
   test("renders the picks table: best rows, free rows, save line, now line, basis", async () => {
