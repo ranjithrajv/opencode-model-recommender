@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Added
+
+- Behaviour-level coverage for `buildFilters` with no authenticated providers and `columnFor` micro budgets (1-12 px).
+
 ## [1.0.0-alpha.7] - 2026-10-14
 
 ### Fixed
