@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [1.0.0-alpha.7] - 2026-10-14
+
+### Fixed
+
+- The tools are now registered with `codemode: false`, so `/recommend-models`
+  and `/model-details` can call `models_recommend` / `models_details` directly.
+  On OpenCode 2 they defaulted to `codemode: true` and were reachable only by
+  writing code for the `execute` tool, so smaller models answered from memory or
+  failed instead.
+- The sidebar separator and model-id column are sized to the measured sidebar
+  width instead of a hardcoded 40 cells, so rows no longer wrap onto a second
+  line on narrow sidebars. The rule spans the usable width and the id column is
+  clamped to what is left after the rest of the row.
+
 ## [1.0.0-alpha.6] - 2026-09-27
 
 ### Changed
@@ -71,8 +85,9 @@ and this project adheres to [Semantic Versioning](://semver.org/spec/v2.0.0.html
 - Provider filter picker (All / per-provider) with persistence
 - Providers default to connected providers discovered from auth.json (new providers appear without code changes)
 
-[Unreleased]: https://github.com/ranjithraj/opencode-model-recommender/compare/v1.0.0-alpha.6...HEAD
+[Unreleased]: https://github.com/ranjithraj/opencode-model-recommender/compare/v1.0.0-alpha.7...HEAD
 [0.1.0]: https://github.com/ranjithraj/opencode-model-recommender/releases/tag/v0.1.0
 [1.0.0-alpha.4]: https://github.com/ranjithraj/opencode-model-recommender/releases/tag/v1.0.0-alpha.4
 [1.0.0-alpha.5]: https://github.com/ranjithraj/opencode-model-recommender/releases/tag/v1.0.0-alpha.5
 [1.0.0-alpha.6]: https://github.com/ranjithraj/opencode-model-recommender/releases/tag/v1.0.0-alpha.6
+[1.0.0-alpha.7]: https://github.com/ranjithraj/opencode-model-recommender/releases/tag/v1.0.0-alpha.7
