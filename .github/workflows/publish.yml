@@ -23,8 +23,8 @@ jobs:
           # setup-node above owns the Node version and the registry auth that
           # `npm publish` needs; keep it and only borrow the `vp` binary.
           node-manager: false
-          package-manager: false
           run-install: false
+          cache: true
 
       - name: Install dependencies
         run: vp install --frozen-lockfile
