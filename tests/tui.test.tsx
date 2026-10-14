@@ -12,6 +12,7 @@ import { createComponent, createRoot, type JSX } from "solid-js"
 import { render } from "solid-js/web"
 import { PluginContextProvider } from "@opencode/plugin/tui"
 import tuiPlugin, { buildFilters, budgetFor, columnFor } from "../tui.js"
+import { availableProviders } from "opencode-plugin-kit"
 
 const paid = (input: number, output: number, read: number) => [{ input, output, cache: { read } }]
 
@@ -160,6 +161,13 @@ describe("sidebar width fitting", () => {
     expect(columnFor(80, 12)).toBe(12)
     expect(columnFor(80, 44)).toBe(30)
   })
+
+  test("keeps the minimum id column even at micro budgets (1..12 px)", () => {
+    // A budget below 24 never yields more than the minimum id column.
+    for (let w = 1; w <= 12; w++) {
+      expect(columnFor(w, 12)).toBe(6)
+    }
+  })
 })
 
 describe("buildFilters", () => {
@@ -169,6 +177,14 @@ describe("buildFilters", () => {
     expect(filters[0]).toMatchObject({ title: "All", providers: [] })
     expect(filters[1]).toMatchObject({ id: "zen", title: "Zen", providers: ["opencode"] })
     expect(filters[2]).toMatchObject({ id: "go", title: "Go", providers: ["opencode-go"] })
+  })
+
+  test("restricts buildFilters to All when no providers are authenticated", () => {
+    vi.mocked(availableProviders).mockReturnValueOnce([])
+    const filters = buildFilters()
+    expect(filters).toEqual([
+      { id: "all", title: "All", description: "Picks across all authenticated providers", providers: [] },
+    ])
   })
 })
 
