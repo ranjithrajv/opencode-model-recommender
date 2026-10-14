@@ -10,18 +10,19 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      # Trusted Publishing: npm exchanges this OIDC token for short-lived
+      # publish credentials, so no long-lived NPM_TOKEN (and no 2FA prompt).
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          registry-url: https://registry.npmjs.org
 
       - uses: voidzero-dev/setup-vp@v1.21.1
         with:
-          # setup-node above owns the Node version and the registry auth that
-          # `npm publish` needs; keep it and only borrow the `vp` binary.
+          # setup-node above owns the Node version; borrow only the `vp` binary.
           node-manager: false
           run-install: false
           cache: true
@@ -46,5 +47,3 @@ jobs:
           fi
           echo "Publishing $VERSION with dist-tag: $TAG"
           npm publish --tag "$TAG"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
