@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](://semver.org/spec/v2.0.0.html
 
 - Behaviour-level coverage for `buildFilters` with no authenticated providers and `columnFor` micro budgets (1-12 px).
 
+### Fixed
+
+- The sidebar widget no longer crashes on OpenTUI 0.6. The native scene rejects
+  `layout-changed` hooks on plain renderables (that hook is scroll-box only), which
+  took the whole slot down. `watchLayout()` now registers the event the host supports
+  — `layout-changed` where available, otherwise `resize` — and measures once at mount
+  when neither is supported, so the fallback width still applies.
+
 ## [1.0.0-alpha.7] - 2026-10-14
 
 ### Fixed

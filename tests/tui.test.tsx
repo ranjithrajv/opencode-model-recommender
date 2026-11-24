@@ -11,7 +11,7 @@ vi.mock("opencode-plugin-kit", async (importOriginal) => ({
 import { createComponent, createRoot, type JSX } from "solid-js"
 import { render } from "solid-js/web"
 import { PluginContextProvider } from "@opencode/plugin/tui"
-import tuiPlugin, { buildFilters, budgetFor, columnFor, compactFor } from "../tui.js"
+import tuiPlugin, { buildFilters, budgetFor, columnFor, compactFor, watchLayout } from "../tui.js"
 import { availableProviders } from "opencode-plugin-kit"
 
 const paid = (input: number, output: number, read: number) => [{ input, output, cache: { read } }]
@@ -156,6 +156,36 @@ describe("sidebar width fitting", () => {
     expect(compactFor(19)).toBe(true)
     expect(compactFor(20)).toBe(false)
     expect(compactFor(38)).toBe(false)
+  })
+
+  test("watchLayout uses the layout event the host supports instead of throwing", () => {
+    const attached: string[] = []
+    const nativeScene = {
+      on: (event: string) => {
+        if (event === "layout-changed") throw new Error("Native scene does not support layout-changed hooks")
+        attached.push(event)
+      },
+    }
+    expect(watchLayout(nativeScene, () => {})).toBe(true)
+    expect(attached).toEqual(["resize"])
+
+    attached.length = 0
+    expect(watchLayout({ on: (event: string) => void attached.push(event) }, () => {})).toBe(true)
+    expect(attached).toEqual(["layout-changed"])
+
+    // A host that rejects both events measures once at mount instead of throwing.
+    expect(
+      watchLayout(
+        {
+          on: () => {
+            throw new Error("Native scene does not support layout-changed hooks")
+          },
+        },
+        () => {},
+      ),
+    ).toBe(false)
+
+    expect(watchLayout(undefined, () => {})).toBe(false)
   })
 
   test("clamps the id column so label, id and tag fit the budget", () => {
