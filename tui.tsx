@@ -61,6 +61,27 @@ export function columnFor(budget: number, wanted: number): number {
   return Math.min(wanted, MAX_ID, Math.max(6, budget - 18))
 }
 
+/**
+ * Attach the layout listener a host actually supports. OpenTUI 0.5 emitted
+ * `layout-changed` from calculateLayout() on every relayout; the 0.6 native scene
+ * restricts that hook to scroll boxes and rejects it for plain renderables, where
+ * `resize` is the supported equivalent. A rejected hook must not take the whole slot
+ * down — the fallback width already covers an unmeasured box — so registration is
+ * guarded, and returns whether a listener was attached.
+ */
+export function watchLayout(el: { on?: (event: string, fn: () => void) => void } | undefined, fn: () => void): boolean {
+  if (!el?.on) return false
+  for (const event of ["layout-changed", "resize"]) {
+    try {
+      el.on(event, fn)
+      return true
+    } catch {
+      /* unsupported on this host: try the next event, then measure once at mount */
+    }
+  }
+  return false
+}
+
 // ---------------------------------------------------------------------------
 // Provider filter registry — the single extension point, mirroring the
 // usage-quota plugin's VIEWS: adding a provider means appending one entry,
@@ -158,11 +179,11 @@ export default Plugin.define({
     function Picks(props: { sessionID?: string }) {
       const ctx = usePlugin()
       // The sidebar slot publishes only { sessionID } — no width — so measure the
-      // laid-out box instead. `layout-changed` is emitted from calculateLayout()
-      // on every relayout (including terminal resize) and carries no payload,
-      // so the handler just re-reads the element's current width.
+      // laid-out box instead. The layout event carries no payload, so the handler
+      // just re-reads the element's current width; watchLayout() picks whichever
+      // event this host supports, which on the 0.6 native scene is `resize`.
       const [avail, setAvail] = createSignal(0)
-      let boxEl: { width?: number } | undefined
+      let boxEl: { width?: number; on?: (event: string, fn: () => void) => void } | undefined
       const measure = () => setAvail(boxEl?.width ?? 0)
       const cached = createCachedResource(
         () => props.sessionID,
@@ -274,11 +295,11 @@ export default Plugin.define({
                   flexDirection="column"
                   width="100%"
                   overflow="hidden"
-                  ref={(el: { width?: number }) => {
+                  ref={(el: { width?: number; on?: (event: string, fn: () => void) => void }) => {
                     boxEl = el
                     measure()
+                    watchLayout(el, measure)
                   }}
-                  on:layout-changed={measure}
                 >
                   <For each={lines}>
                     {(l) => (
